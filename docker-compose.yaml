@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  polybot-service:
+    image: ${POLYBOT_IMG_NAME}
+    container_name: polybot-container
+    ports:
+      - "8443:8443"
+    environment:
+      TELEGRAM_TOKEN: /run/secrets/telegram_token
+      TELEGRAM_APP_URL: ${NGROK_DOMAIN}
+      BUCKET_NAME: tal-polybot-docker-bucket
+    depends_on:
+      - yolo5-service
+    networks:
+      - mongoCluster
+    secrets:
+      - telegram_token
+
+  yolo5-service:
+    image: ${YOLO5_IMG_NAME}
+    container_name: yolo5-container
+    ports:
+      - "8081:8081"
+    environment:
+      BUCKET_NAME: tal-polybot-docker-bucket
+    networks:
+      - mongoCluster
+
+  mongo1:
+    image: mongo:5
+    container_name: mongo1
+    ports:
+      - "27017:27017"
+    command: >
+      bash -c "mongod --replSet myReplicaSet --bind_ip_all &&
+      until mongo --host mongo1:27017 --eval 'db.adminCommand({ ping: 1 })' > /dev/null 2>&1; do sleep 1; done &&
+      mongo --host mongo1:27017 --eval 'rs.initiate({_id: \"myReplicaSet\", members: [
+        {_id: 0, host: \"mongo1:27017\"},
+        {_id: 1, host: \"mongo2:27017\"},
+        {_id: 2, host: \"mongo3:27017\"}
+      ]})'"
+    volumes:
+      - mongo1_data:/data/db
+    networks:
+      - mongoCluster
+
+  mongo2:
+    image: mongo:5
+    container_name: mongo2
+    ports:
+      - "27018:27017"
+    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip_all"]
+    volumes:
+      - mongo2_data:/data/db
+    networks:
+      - mongoCluster
+
+  mongo3:
+    image: mongo:5
+    container_name: mongo3
+    ports:
+      - "27019:27017"
+    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip_all"]
+    volumes:
+      - mongo3_data:/data/db
+    networks:
+      - mongoCluster
+
+networks:
+  mongoCluster:
+    driver: bridge
+
+volumes:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
+
+secrets:
+   telegram_token:
+     file: telegram_bot_token.secret
+

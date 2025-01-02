@@ -1,11 +1,15 @@
 import time
 from pathlib import Path
+
+import boto3
 from flask import Flask, request
 from detect import run
+from pymongo import MongoClient
 import uuid
 import yaml
 from loguru import logger
 import os
+
 
 images_bucket = os.environ['BUCKET_NAME']
 
@@ -13,6 +17,15 @@ with open("data/coco128.yaml", "r") as stream:
     names = yaml.safe_load(stream)['names']
 
 app = Flask(__name__)
+
+# Initialize S3 client
+s3 = boto3.client('s3')
+
+# Initialize MongoDB client
+mongo_client = MongoClient(os.getenv('MONGO_URI'))
+db = mongo_client.predictions  # Replace with your DB name
+predictions_collection = db.predictions
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -24,9 +37,16 @@ def predict():
     # Receives a URL parameter representing the image to download from S3
     img_name = request.args.get('imgName')
 
+    bucket_name = os.getenv('BUCKET_NAME')
     # TODO download img_name from S3, store the local image path in the original_img_path variable.
     #  The bucket name is provided as an env var BUCKET_NAME.
-    original_img_path = ...
+    original_img_path = img_name
+    try:
+        s3.download_file(bucket_name, img_name, original_img_path)
+        logger.info(f'prediction: {prediction_id}/{original_img_path}. Download img completed')
+    except Exception as e:
+        logger.error(f'Error downloading image from S3: {e}')
+        return f'Error downloading image: {e}', 500
 
     logger.info(f'prediction: {prediction_id}/{original_img_path}. Download img completed')
 
@@ -47,6 +67,16 @@ def predict():
     predicted_img_path = Path(f'static/data/{prediction_id}/{original_img_path}')
 
     # TODO Uploads the predicted image (predicted_img_path) to S3 (be careful not to override the original image).
+    predicted_img_path = Path(f'static/data/{prediction_id}/labels/{img_name}')
+
+    predicted_s3_key = f'predictions/{prediction_id}/{img_name}'
+    try:
+        s3.upload_file(str(predicted_img_path), bucket_name, predicted_s3_key)
+        logger.info(f'prediction: {prediction_id}/{predicted_img_path}. Upload completed')
+    except Exception as e:
+        logger.error(f'Error uploading predicted image to S3: {e}')
+        return f'Error uploading predicted image: {e}', 500
+
 
     # Parse prediction labels and create a summary
     pred_summary_path = Path(f'static/data/{prediction_id}/labels/{original_img_path.split(".")[0]}.txt')
@@ -73,6 +103,13 @@ def predict():
         }
 
         # TODO store the prediction_summary in MongoDB
+        try:
+            predictions_collection.insert_one(prediction_summary)
+            logger.info(f'prediction: {prediction_id}. Summary stored in MongoDB')
+        except Exception as e:
+            logger.error(f'Error storing prediction summary in MongoDB: {e}')
+            return f'Error storing prediction summary: {e}', 500
+
 
         return prediction_summary
     else:

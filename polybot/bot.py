@@ -3,7 +3,9 @@ from loguru import logger
 import os
 import time
 from telebot.types import InputFile
-
+import requests
+import boto3
+from pathlib import Path
 
 class Bot:
 
@@ -75,3 +77,61 @@ class ObjectDetectionBot(Bot):
             # TODO upload the photo to S3
             # TODO send an HTTP request to the `yolo5` service for prediction
             # TODO send the returned results to the Telegram end-user
+
+            bucket_name = os.environ['BUCKET_NAME']
+            s3_client = boto3.client('s3')
+            photo_key = f"uploaded_photos/{Path(photo_path).name}"
+
+            try:
+                s3_client.upload_file(photo_path, bucket_name, photo_key)
+                logger.info(f"Uploaded photo to S3: {bucket_name}/{photo_key}")
+            except Exception as e:
+                logger.error(f"Failed to upload photo to S3: {e}")
+                self.send_text(
+                    chat_id=msg['chat']['id'],
+                    text="Error: Could not upload the photo. Please try again later."
+                )
+                return
+
+            # Step 3: Send an HTTP request to the YOLO5 service for prediction
+            yolo5_service_url = "http://localhost:8081/predict"
+            params = {"imgName": Path(photo_key).name}
+
+            try:
+                response = requests.post(yolo5_service_url, params=params)
+                response.raise_for_status()
+                prediction_results = response.json()
+                logger.info(f"YOLO5 prediction results: {prediction_results}")
+            except Exception as e:
+                logger.error(f"Error calling YOLO5 service: {e}")
+                self.send_text(
+                    chat_id=msg['chat']['id'],
+                    text="Error: Could not process the photo. Please try again later."
+                )
+                return
+
+            # Step 4: Send the returned results to the Telegram end-user
+            prediction_summary = self.format_prediction_summary(prediction_results)
+            try:
+                self.send_text(msg['chat']['id'], prediction_summary)
+            except Exception as e:
+                logger.error(f"Error sending message to Telegram user: {e}")
+                self.send_text(
+                    chat_id=msg['chat']['id'],
+                    text="Error: Unable to send the prediction results. Please try again later."
+                )
+
+    def format_prediction_summary(self, prediction_results):
+        """Formats the prediction results into a readable string for the user."""
+        labels = prediction_results.get("labels", [])
+        if not labels:
+            return "No objects detected in the image."
+
+        summary = "Detected objects:\n\n"
+        for label in labels:
+            summary += (
+                f"Class: {label['class']}\n"
+                f"Center: ({label['cx']}, {label['cy']})\n"
+                f"Size: {label['width']} x {label['height']}\n\n"
+            )
+        return summary
