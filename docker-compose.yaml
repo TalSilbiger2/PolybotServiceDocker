@@ -34,26 +34,17 @@ services:
     command: >
       bash -c "
       rm -f /data/db/mongod.lock &&
-      mongod --replSet myReplicaSet --bind_ip_all --port 27017 & 
-      until mongo --host mongo1:27017 --eval 'db.adminCommand({ ping: 1 })' > /dev/null 2>&1; do
-        echo 'Waiting for mongo1 to be ready...';
-        sleep 2;
-      done;
-      echo 'Initializing replica set...';
-      mongo --host mongo1:27017 --eval '
-        rs.initiate({
-          _id: \"myReplicaSet\",
-          members: [
-            { _id: 0, host: \"mongo1:27017\" },
-            { _id: 1, host: \"mongo2:27017\" },
-            { _id: 2, host: \"mongo3:27017\" }
-          ]
-        })'
+      mongod --replSet myReplicaSet --bind_ip_all --port 27017
       "
     volumes:
       - mongo1_data:/data/db
     networks:
       - mongoCluster
+    healthcheck:
+      test: ["CMD", "mongo", "--host", "mongo1", "--eval", "db.adminCommand({ ping: 1 })"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
 
   mongo2:
     image: mongo:5
@@ -84,6 +75,35 @@ services:
       - mongo3_data:/data/db
     networks:
       - mongoCluster
+
+  mongo-init:
+    image: mongo:5
+    container_name: mongo-init
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+    networks:
+      - mongoCluster
+    command: >
+      bash -c "
+      until mongo --host mongo1:27017 --eval 'db.adminCommand({ ping: 1 })' > /dev/null 2>&1; do
+        echo 'Waiting for mongo1 to be ready...';
+        sleep 2;
+      done;
+      echo 'Initializing replica set...';
+      mongo --host mongo1:27017 --eval '
+        rs.initiate({
+          _id: \"myReplicaSet\",
+          members: [
+            { _id: 0, host: \"mongo1:27017\" },
+            { _id: 1, host: \"mongo2:27017\" },
+            { _id: 2, host: \"mongo3:27017\" }
+          ]
+        })';
+      echo 'Replica set initialized successfully.';
+      "
+    restart: "no"
 
 networks:
   mongoCluster:
