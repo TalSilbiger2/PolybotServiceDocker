@@ -33,6 +33,7 @@ services:
       - "27017:27017"
     command: >
       bash -c "
+      rm -f /data/db/mongod.lock &&
       mongod --replSet myReplicaSet --bind_ip_all --port 27017 & 
       until mongo --host mongo1:27017 --eval 'db.adminCommand({ ping: 1 })' > /dev/null 2>&1; do
         echo 'Waiting for mongo1 to be ready...';
@@ -59,7 +60,11 @@ services:
     container_name: mongo2
     ports:
       - "27018:27017"
-    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip_all"]
+    command: >
+      bash -c "
+      rm -f /data/db/mongod.lock &&
+      mongod --replSet myReplicaSet --bind_ip_all --port 27017
+      "
     volumes:
       - mongo2_data:/data/db
     networks:
@@ -70,7 +75,11 @@ services:
     container_name: mongo3
     ports:
       - "27019:27017"
-    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip_all"]
+    command: >
+      bash -c "
+      rm -f /data/db/mongod.lock &&
+      mongod --replSet myReplicaSet --bind_ip_all --port 27017
+      "
     volumes:
       - mongo3_data:/data/db
     networks:
@@ -88,4 +97,3 @@ volumes:
 secrets:
    telegram_token:
      file: telegram_bot_token.secret
-
