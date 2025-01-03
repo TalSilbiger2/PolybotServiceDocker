@@ -2,4 +2,4 @@ flask
 pyyaml
 loguru
 boto3
-pymongo
+pymongo`

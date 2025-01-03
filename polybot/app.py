@@ -5,7 +5,12 @@ from bot import ObjectDetectionBot
 
 app = flask.Flask(__name__)
 
-TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
+
+secrets_file_path = "/run/secrets/telegram_token"
+
+with open(secrets_file_path, "r") as file:
+    TELEGRAM_TOKEN =  file.read().strip()
+
 TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
 
 
