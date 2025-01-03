@@ -7,9 +7,8 @@ services:
     ports:
       - "8443:8443"
     environment:
-      TELEGRAM_TOKEN: /run/secrets/telegram_token
-      TELEGRAM_APP_URL: ${NGROK_DOMAIN}
-      BUCKET_NAME: tal-polybot-docker-bucket
+      TELEGRAM_APP_URL: ${TELEGRAM_APP_URL}
+      BUCKET_NAME: ${BUCKET_NAME}
     depends_on:
       - yolo5-service
     networks:
