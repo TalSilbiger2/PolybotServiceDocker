@@ -32,13 +32,23 @@ services:
     ports:
       - "27017:27017"
     command: >
-      bash -c "mongod --replSet myReplicaSet --bind_ip_all &&
-      until mongo --host mongo1:27017 --eval 'db.adminCommand({ ping: 1 })' > /dev/null 2>&1; do sleep 1; done &&
-      mongo --host mongo1:27017 --eval 'rs.initiate({_id: \"myReplicaSet\", members: [
-        {_id: 0, host: \"mongo1:27017\"},
-        {_id: 1, host: \"mongo2:27017\"},
-        {_id: 2, host: \"mongo3:27017\"}
-      ]})'"
+      bash -c "
+      mongod --replSet myReplicaSet --bind_ip_all --port 27017 & 
+      until mongo --host mongo1:27017 --eval 'db.adminCommand({ ping: 1 })' > /dev/null 2>&1; do
+        echo 'Waiting for mongo1 to be ready...';
+        sleep 2;
+      done;
+      echo 'Initializing replica set...';
+      mongo --host mongo1:27017 --eval '
+        rs.initiate({
+          _id: \"myReplicaSet\",
+          members: [
+            { _id: 0, host: \"mongo1:27017\" },
+            { _id: 1, host: \"mongo2:27017\" },
+            { _id: 2, host: \"mongo3:27017\" }
+          ]
+        })'
+      "
     volumes:
       - mongo1_data:/data/db
     networks:
