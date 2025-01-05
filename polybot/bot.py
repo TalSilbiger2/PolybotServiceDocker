@@ -139,17 +139,3 @@ class ObjectDetectionBot(Bot):
             )
         return summary
 
-
-if __name__ == "__main__":
-   # Load environment variables
-   TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
-   TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
-
-   bot = ObjectDetectionBot(TELEGRAM_TOKEN, TELEGRAM_APP_URL)
-
-   @bot.telegram_bot_client.message_handler(func=lambda message: True, content_types=['text', 'photo'])
-   def on_message(message):
-      bot.handle_message(message.json)
-
-   logger.info("Starting the bot...")
-   bot.telegram_bot_client.infinity_polling()
