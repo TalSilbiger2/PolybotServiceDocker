@@ -69,20 +69,19 @@ class Bot:
 
 class ObjectDetectionBot(Bot):
     def handle_message(self, msg):
+        """Handle the incoming messages, process the photos and interact with YOLO5 service"""
         logger.info(f'Incoming message: {msg}')
 
         if self.is_current_msg_photo(msg):
+            # Message arrive from the user to the telegram bot, we first download it
             photo_path = self.download_user_photo(msg)
-
-            # TODO upload the photo to S3
-            # TODO send an HTTP request to the `yolo5` service for prediction
-            # TODO send the returned results to the Telegram end-user
 
             bucket_name = os.environ['BUCKET_NAME']
             s3_client = boto3.client('s3')
             photo_key = f"uploaded_photos/{Path(photo_path).name}"
 
             try:
+                # After download it, we will upload it to S3 bucket
                 s3_client.upload_file(photo_path, bucket_name, photo_key)
                 logger.info(f"Uploaded photo to S3: {bucket_name}/{photo_key}")
             except Exception as e:
@@ -93,13 +92,16 @@ class ObjectDetectionBot(Bot):
                 )
                 return
 
-            # Step 3: Send an HTTP request to the YOLO5 service for prediction
-            yolo5_service_url = "http://localhost:8081/predict"
+            # Polybot service sends an HTTP request to the YOLO5 service for prediction
+            yolo5_service_url = "http://yolo5-service:8081/predict"
             params = {"imgName": Path(photo_key).name}
 
             try:
+                # Polybot sends the HTTP POST request
                 response = requests.post(yolo5_service_url, params=params)
+                # Polybot waits for response
                 response.raise_for_status()
+                # Polybot parse the JSON
                 prediction_results = response.json()
                 logger.info(f"YOLO5 prediction results: {prediction_results}")
             except Exception as e:
@@ -113,6 +115,7 @@ class ObjectDetectionBot(Bot):
             # Step 4: Send the returned results to the Telegram end-user
             prediction_summary = self.format_prediction_summary(prediction_results)
             try:
+                # Polybot sends the prediction results
                 self.send_text(msg['chat']['id'], prediction_summary)
             except Exception as e:
                 logger.error(f"Error sending message to Telegram user: {e}")
