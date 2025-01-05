@@ -77,8 +77,10 @@ class ObjectDetectionBot(Bot):
             photo_path = self.download_user_photo(msg)
 
             bucket_name = os.environ['BUCKET_NAME']
+            self.send_text(chat_id=msg['chat']['id'], text=f"Bucket name is {bucket_name}")
             s3_client = boto3.client('s3')
             photo_key = f"uploaded_photos/{Path(photo_path).name}"
+            self.send_text(chat_id=msg['chat']['id'], text=f"photo key {photo_key}")
 
             try:
                 # After download it, we will upload it to S3 bucket
