@@ -119,11 +119,8 @@ class ObjectDetectionBot(Bot):
     def yolo5_prediction(self, msg, image_url):
         """Yolo5 prediction for the image"""
 
-        # params = {'imgName': image_url}
         yolo5_service_url = f"http://yolo5-container:8081/predict?imgName={image_url}"
         response = requests.post(yolo5_service_url)
         response.raise_for_status()
-        self.send_text(msg['chat']['id'], response.status_code)
         prediction_results = response.json()
-        self.send_text(msg['chat']['id'], prediction_results)
         return prediction_results
