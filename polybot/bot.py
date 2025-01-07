@@ -106,13 +106,16 @@ class ObjectDetectionBot(Bot):
                 return
 
             # TODO send an HTTP request to the `yolo5` service for prediction
-            image_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
+
             yolo5_service_url = "http://yolo5-service:8081/predict"
+            image_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
+            image_url=str(image_url)
 
             try:
-                headers = {"Content-Type": "application/json"}
-                full_url = f"{yolo5_service_url}?imgUrl={image_url}"
-                response = requests.post(full_url, headers=headers)
+                #headers = {"Content-Type": "application/json"}
+                params={'imgName':image_url}
+                #full_url = f"{yolo5_service_url}?imgUrl={image_url}"
+                response = requests.post(yolo5_service_url, params=params)
                 response.raise_for_status()
                 prediction_results = response.json()
                 logger.info(f"YOLO5 prediction results: {prediction_results}")
