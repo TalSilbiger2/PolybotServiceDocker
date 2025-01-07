@@ -114,10 +114,10 @@ class ObjectDetectionBot(Bot):
                 prediction_result = self.yolo5_prediction(msg, image_url)
                 if not prediction_result or 'labels' not in prediction_result or len(prediction_result['labels']) == 0:
                     error_message = "Sorry, no objects were detected in the image."
-                    logger.info(f"No objects detected, sending message: {error_message}")  # לוג
+                    logger.info(f"No objects detected, sending message: {error_message}")
                     self.send_text(msg['chat']['id'], error_message)
                     return
-                logger.info(f"Prediction results: {prediction_result}")  # לוג נוסף
+                logger.info(f"Prediction results: {prediction_result}")
                 self.send_prediction_result(msg['chat']['id'], prediction_result)
                 self.send_text(msg['chat']['id'], prediction_result)
             except Exception as e:
@@ -138,7 +138,7 @@ class ObjectDetectionBot(Bot):
 
     def send_prediction_result(self, chat_id, prediction_result):
         """
-        Send the results as aa text to the user
+        Send the results as a text to the user
         """
         object_count = {}
         for label in prediction_result['labels']:
