@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  EC2_PUBLIC_IP: 13.48.47.122
+  EC2_PUBLIC_IP: 16.16.110.67
 
 jobs:
   PolybotBuild:
