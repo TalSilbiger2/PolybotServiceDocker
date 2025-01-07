@@ -64,7 +64,9 @@ class Bot:
         )
 
     def handle_message(self, msg):
-        """Bot Main message handler"""
+        """
+        Bot Main message handler
+        """
         logger.info(f'Incoming message: {msg}')
         self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
 
@@ -110,6 +112,13 @@ class ObjectDetectionBot(Bot):
             image_url=str(image_url)
             try:
                 prediction_result = self.yolo5_prediction(msg, image_url)
+                if not prediction_result or 'labels' not in prediction_result or len(prediction_result['labels']) == 0:
+                    error_message = "Sorry, no objects were detected in the image."
+                    logger.info(f"No objects detected, sending message: {error_message}")  # לוג
+                    self.send_text(msg['chat']['id'], error_message)
+                    return
+                logger.info(f"Prediction results: {prediction_result}")  # לוג נוסף
+                self.send_prediction_result(msg['chat']['id'], prediction_result)
                 self.send_text(msg['chat']['id'], prediction_result)
             except Exception as e:
                 logger.exception(f"Error during YOLO5 prediction {e}")
@@ -117,10 +126,33 @@ class ObjectDetectionBot(Bot):
 
 
     def yolo5_prediction(self, msg, image_url):
-        """Yolo5 prediction for the image"""
+        """
+        Yolo5 prediction for the image
+        """
 
         yolo5_service_url = f"http://yolo5-service:8081/predict?imgName={image_url}"
         response = requests.post(yolo5_service_url)
         response.raise_for_status()
         prediction_results = response.json()
         return prediction_results
+
+    def send_prediction_result(self, chat_id, prediction_result):
+        """
+        Send the results as aa text to the user
+        """
+        object_count = {}
+        for label in prediction_result['labels']:
+            object_name = label['class']
+            object_count[object_name] = object_count.get(object_name, 0) + 1
+
+        message = "Detected objects:\n"
+        for obj, count in object_count.items():
+            message += f"{obj}: {count}\n"
+
+        self.send_text(chat_id, message)
+
+    def send_prediction_image(self, chat_id, image_path):
+        """
+        Sent the photo with the results to the user through the telegram APP.
+        """
+        self.send_photo(chat_id, image_path)
