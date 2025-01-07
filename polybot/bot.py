@@ -72,7 +72,6 @@ class Bot:
 class ObjectDetectionBot(Bot):
 
 
-    @retry(stop_max_attempt_number=3, wait_fixed=2000)
     def upload_to_s3(self, s3_client, msg, file_path, bucket_name, file_name):
         try:
             s3_client.upload_file(file_path, bucket_name, file_name)
@@ -112,7 +111,7 @@ class ObjectDetectionBot(Bot):
             params = {"imgUrl": image_url}
 
             try:
-                response = requests.post(yolo5_service_url, params=params, timeout=10)
+                response = requests.post(yolo5_service_url, params=params)
                 response.raise_for_status()
                 prediction_results = response.json()
                 logger.info(f"YOLO5 prediction results: {prediction_results}")
