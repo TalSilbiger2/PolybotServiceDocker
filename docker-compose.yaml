@@ -23,6 +23,7 @@ services:
       - "8081:8081"
     environment:
       BUCKET_NAME: tal-polybot-docker-bucket
+      MONGO_URI: ${MONGO_URI}
     networks:
       - mongoCluster
 
