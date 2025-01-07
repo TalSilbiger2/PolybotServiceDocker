@@ -114,10 +114,12 @@ class ObjectDetectionBot(Bot):
             try:
                 params={'imgName':image_url}
                 response = requests.post(yolo5_service_url, params=params)
-                response.raise_for_status()
-                prediction_results = response.json()
-                logger.info(f"YOLO5 prediction results: {prediction_results}")
-                self.send_text(msg['chat']['id'], prediction_results)
+                self.send_text(msg['chat']['id'], response)
+                self.send_text(msg['chat']['id'], response.raise_for_status)
+                # response.raise_for_status()
+                # prediction_results = response.json()
+                logger.info(f"YOLO5 prediction results: {response.json()}")
+                self.send_text(msg['chat']['id'], response.json())
             except requests.exceptions.RequestException as e:
                 logger.error(f"Error calling YOLO5 service: {e}")
                 self.send_text(
@@ -127,7 +129,7 @@ class ObjectDetectionBot(Bot):
                 return
 
             # TODO send the returned results to the Telegram end-user
-            prediction_summary = self.format_prediction_summary(prediction_results)
+            prediction_summary = self.format_prediction_summary(response.json())
             try:
                 self.send_text(msg['chat']['id'], prediction_summary)
             except Exception as e:
