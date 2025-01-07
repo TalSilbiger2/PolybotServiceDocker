@@ -106,39 +106,22 @@ class ObjectDetectionBot(Bot):
                 return
 
             # TODO send an HTTP request to the `yolo5` service for prediction
-
-
             image_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
             image_url=str(image_url)
             prediction_result = self.yolo5_prediction(msg, image_url)
+            self.send_text(msg['chat']['id'], prediction_result)
 
+
+            # # TODO send the returned results to the Telegram end-user
+            # prediction_summary = self.format_prediction_summary(prediction_result)
             # try:
-            #     params={'imgName':image_url}
-            #     response = requests.post(yolo5_service_url, params=params)
-            #     self.send_text(msg['chat']['id'], response)
-            #     self.send_text(msg['chat']['id'], response.raise_for_status)
-            #     # response.raise_for_status()
-            #     # prediction_results = response.json()
-            #     logger.info(f"YOLO5 prediction results: {response.json()}")
-            #     self.send_text(msg['chat']['id'], response.json())
-            # except requests.exceptions.RequestException as e:
-            #     logger.error(f"Error calling YOLO5 service: {e}")
+            #     self.send_text(msg['chat']['id'], prediction_summary)
+            # except Exception as e:
+            #     logger.error(f"Error sending message to Telegram user: {e}")
             #     self.send_text(
             #         chat_id=msg['chat']['id'],
-            #         text="Error: Could not process the photo. Please try again later."
+            #         text="Error: Unable to send the prediction results. Please try again later."
             #     )
-            #     return
-
-            # TODO send the returned results to the Telegram end-user
-            prediction_summary = self.format_prediction_summary(prediction_result)
-            try:
-                self.send_text(msg['chat']['id'], prediction_summary)
-            except Exception as e:
-                logger.error(f"Error sending message to Telegram user: {e}")
-                self.send_text(
-                    chat_id=msg['chat']['id'],
-                    text="Error: Unable to send the prediction results. Please try again later."
-                )
 
 
     def yolo5_prediction(self, msg, image_url):
@@ -151,18 +134,18 @@ class ObjectDetectionBot(Bot):
         prediction_results = response.json()
         self.send_text(msg['chat']['id'], prediction_results)
         return prediction_results
-
-    def format_prediction_summary(self, prediction_results):
-        """Formats the prediction results into a readable string for the user."""
-        labels = prediction_results.get("labels", [])
-        if not labels:
-            return "No objects detected in the image."
-
-        summary = "Detected objects:\n\n"
-        for label in labels:
-            summary += (
-                f"Class: {label['class']}\n"
-                f"Center: ({label['cx']}, {label['cy']})\n"
-                f"Size: {label['width']} x {label['height']}\n\n"
-            )
-        return summary
+    #
+    # def format_prediction_summary(self, prediction_results):
+    #     """Formats the prediction results into a readable string for the user."""
+    #     labels = prediction_results.get("labels", [])
+    #     if not labels:
+    #         return "No objects detected in the image."
+    #
+    #     summary = "Detected objects:\n\n"
+    #     for label in labels:
+    #         summary += (
+    #             f"Class: {label['class']}\n"
+    #             f"Center: ({label['cx']}, {label['cy']})\n"
+    #             f"Size: {label['width']} x {label['height']}\n\n"
+    #         )
+    #     return summary
