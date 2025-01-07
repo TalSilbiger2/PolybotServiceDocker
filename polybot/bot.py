@@ -111,7 +111,8 @@ class ObjectDetectionBot(Bot):
             params = {"imgUrl": image_url}
 
             try:
-                response = requests.post(yolo5_service_url, params=params)
+                headers = {"Content-Type": "application/json"}
+                response = requests.post(yolo5_service_url, json=params, headers=headers)
                 response.raise_for_status()
                 prediction_results = response.json()
                 logger.info(f"YOLO5 prediction results: {prediction_results}")
