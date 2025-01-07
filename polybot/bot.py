@@ -116,7 +116,6 @@ class ObjectDetectionBot(Bot):
                 self.send_text(msg['chat']['id'], text="ERROR: Could not process the photo")
 
 
-
     def yolo5_prediction(self, msg, image_url):
         """Yolo5 prediction for the image"""
 
