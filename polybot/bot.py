@@ -127,7 +127,7 @@ class ObjectDetectionBot(Bot):
 
     def yolo5_prediction(self, msg, image_url):
         """
-        Yolo5 prediction for the image
+        Yolo5 prediction for the image.
         """
 
         yolo5_service_url = f"http://yolo5-service:8081/predict?imgName={image_url}"
