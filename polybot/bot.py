@@ -112,13 +112,12 @@ class ObjectDetectionBot(Bot):
             image_url=str(image_url)
 
             try:
-                #headers = {"Content-Type": "application/json"}
                 params={'imgName':image_url}
-                #full_url = f"{yolo5_service_url}?imgUrl={image_url}"
                 response = requests.post(yolo5_service_url, params=params)
                 response.raise_for_status()
                 prediction_results = response.json()
                 logger.info(f"YOLO5 prediction results: {prediction_results}")
+                self.send_text(msg['chat']['id'], prediction_results)
             except requests.exceptions.RequestException as e:
                 logger.error(f"Error calling YOLO5 service: {e}")
                 self.send_text(
