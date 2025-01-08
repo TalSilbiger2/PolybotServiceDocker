@@ -13,7 +13,6 @@ from pymongo import MongoClient
 images_bucket = os.environ['BUCKET_NAME']
 s3_client = boto3.client('s3')
 
-# בדוק אם הצלחנו להתחבר ל-S3
 try:
     response = s3_client.list_buckets()
     print("Buckets:", response['Buckets'])

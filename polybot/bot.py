@@ -5,8 +5,7 @@ import time
 from telebot.types import InputFile
 import requests
 import boto3
-from pathlib import Path
-from retrying import retry
+
 
 
 class Bot:
@@ -71,21 +70,10 @@ class Bot:
         self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
 
 
+
+
+
 class ObjectDetectionBot(Bot):
-
-
-    def upload_to_s3(self, s3_client, msg, file_path, bucket_name, file_name):
-        try:
-            s3_client.upload_file(file_path, bucket_name, file_name)
-            logger.info(f"The file was uploaded to S3, under the name: {file_name}")
-        except Exception as e:
-            logger.error(f"Failed to upload photo to S3: {e}")
-            self.send_text(
-                chat_id=msg['chat']['id'],
-                text="Error: Could not upload the photo. Please try again later."
-            )
-            return
-
 
     def handle_message(self, msg):
         logger.info(f'Incoming message: {msg}')
@@ -111,7 +99,7 @@ class ObjectDetectionBot(Bot):
             image_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
             image_url=str(image_url)
             try:
-                prediction_result = self.yolo5_prediction(msg, image_url)
+                prediction_result = self.yolo5_prediction(image_url)
                 if not prediction_result or 'labels' not in prediction_result or len(prediction_result['labels']) == 0:
                     error_message = "Sorry, no objects were detected in the image."
                     logger.info(f"No objects detected, sending message: {error_message}")
@@ -124,14 +112,29 @@ class ObjectDetectionBot(Bot):
                 logger.exception(f"Error during YOLO5 prediction {e}")
                 self.send_text(msg['chat']['id'], text="ERROR: Could not process the photo")
 
+    def upload_to_s3(self, s3_client, msg, file_path, bucket_name, file_name):
+        try:
+            s3_client.upload_file(file_path, bucket_name, file_name)
+            logger.info(f"The file was uploaded to S3, under the name: {file_name}")
+        except Exception as e:
+            logger.error(f"Failed to upload photo to S3: {e}")
+            self.send_text(
+                chat_id=msg['chat']['id'],
+                text="Error: Could not upload the photo. Please try again later."
+            )
+            return
 
-    def yolo5_prediction(self, msg, image_url):
+
+    def yolo5_prediction(self, image_url):
         """
         Yolo5 prediction for the image.
         """
-
         yolo5_service_url = f"http://yolo5-service:8081/predict?imgName={image_url}"
-        response = requests.post(yolo5_service_url)
+        try:
+            response = requests.post(yolo5_service_url)
+        except Exception as e:
+            logger.error(f"Failed to get prediction from YOLOv5: {e}")
+            raise RuntimeError(f"Failed to get prediction from YOLOv5: {e}")
         response.raise_for_status()
         prediction_results = response.json()
         return prediction_results

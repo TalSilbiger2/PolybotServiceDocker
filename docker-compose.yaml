@@ -7,10 +7,16 @@ services:
     ports:
       - "8443:8443"
     environment:
-      TELEGRAM_APP_URL: ${TELEGRAM_APP_URL}
-      BUCKET_NAME: ${BUCKET_NAME}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - TELEGRAM_APP_URL=${TELEGRAM_APP_URL}
+      - MONGO_URI=${MONGO_URI}
+      - BUCKET_NAME=${BUCKET_NAME}
+      - YOLO_PORT=${YOLO_PORT}
     depends_on:
       - yolo5-service
+      - mongo1
+      - mongo2
+      - mongo3
     networks:
       - mongoCluster
     secrets:
@@ -22,58 +28,35 @@ services:
     ports:
       - "8081:8081"
     environment:
-      BUCKET_NAME: tal-polybot-docker-bucket
-      MONGO_URI: ${MONGO_URI}
+      - MONGO_URI=${MONGO_URI}
+      - BUCKET_NAME=${BUCKET_NAME}
     networks:
       - mongoCluster
 
   mongo1:
     image: mongo:5
     container_name: mongo1
+    command: mongod --replSet myReplicaSet --bind_ip localhost,mongo1
     ports:
       - "27017:27017"
-    command: >
-      bash -c "
-      rm -f /data/db/mongod.lock &&
-      mongod --replSet myReplicaSet --bind_ip_all --port 27017
-      "
-    volumes:
-      - mongo1_data:/data/db
     networks:
       - mongoCluster
-    healthcheck:
-      test: ["CMD", "mongo", "--host", "mongo1", "--eval", "db.adminCommand({ ping: 1 })"]
-      interval: 10s
-      retries: 5
-      timeout: 5s
 
   mongo2:
     image: mongo:5
     container_name: mongo2
+    command: mongod --replSet myReplicaSet --bind_ip localhost,mongo2
     ports:
       - "27018:27017"
-    command: >
-      bash -c "
-      rm -f /data/db/mongod.lock &&
-      mongod --replSet myReplicaSet --bind_ip_all --port 27017
-      "
-    volumes:
-      - mongo2_data:/data/db
     networks:
       - mongoCluster
 
   mongo3:
     image: mongo:5
     container_name: mongo3
+    command: mongod --replSet myReplicaSet --bind_ip localhost,mongo3
     ports:
       - "27019:27017"
-    command: >
-      bash -c "
-      rm -f /data/db/mongod.lock &&
-      mongod --replSet myReplicaSet --bind_ip_all --port 27017
-      "
-    volumes:
-      - mongo3_data:/data/db
     networks:
       - mongoCluster
 

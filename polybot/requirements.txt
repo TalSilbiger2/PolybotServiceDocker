@@ -7,4 +7,3 @@ telebot
 boto3
 telebot
 requests
-retrying
