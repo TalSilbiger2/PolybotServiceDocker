@@ -75,7 +75,7 @@ jobs:
             cat <<EOF > .env
             POLYBOT_IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.run_number }}
             YOLO5_IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.run_number }}
-            TELEGRAM_APP_URL=$NGROK_DOMAIN
+            TELEGRAM_APP_URL=https://4d9e-13-48-86-225.ngrok-free.app
             TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
             BUCKET_NAME=${{ secrets.BUCKET_NAME }}
             EOF
