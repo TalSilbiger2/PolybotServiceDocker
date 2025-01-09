@@ -78,7 +78,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - BUCKET_NAME=omerpolybucket
+      - BUCKET_NAME=tal-polybot-docker-bucket
       - MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=myReplicaSet
       - MONGO_DB=default_db
       - MONGO_COLLECTION=predictions
