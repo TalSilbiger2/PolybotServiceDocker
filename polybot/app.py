@@ -7,9 +7,10 @@ app = flask.Flask(__name__)
 
 secrets_file_path = "/home/ubuntu/TELEGRAM_TOKEN.txt"
 
-with open(secrets_file_path, "r") as file:
-    TELEGRAM_TOKEN =  file.read().strip()
+# with open(secrets_file_path, "r") as file:
+#     TELEGRAM_TOKEN =  file.read().strip()
 
+TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
 
 
