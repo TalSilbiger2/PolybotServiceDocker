@@ -95,7 +95,7 @@ jobs:
             POLYBOT_IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.run_number }}
             YOLO5_IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.run_number }}
             TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
-            TELEGRAM_APP_URL=https://4eeb-13-50-232-217.ngrok-free.app
+            TELEGRAM_APP_URL=$NGROK_DOMAIN
             MONGO_URI=mongodb://mongo1:27017,mongo2:27018,mongo3:27019/?replicaSet=myReplicaSet
             BUCKET_NAME=tal-polybot-docker-bucket
             YOLO_PORT=8081
