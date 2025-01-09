@@ -5,7 +5,7 @@ from bot import ObjectDetectionBot
 
 app = flask.Flask(__name__)
 
-secrets_file_path = "/home/ubuntu/PolybotService/telegram_bot_token.secret"
+secrets_file_path = "/home/ubuntu/TELEGRAM_TOKEN.txt"
 
 with open(secrets_file_path, "r") as file:
     TELEGRAM_TOKEN =  file.read().strip()
