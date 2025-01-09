@@ -23,7 +23,7 @@ class ObjectDetectionBot:
         self.s3_bucket_name = s3_bucket_name
         self.s3_client = s3_client
 
-        self.s3_client = boto3.client('s3', region_name='eu-north-1')  # IAM Role handles authentication
+        self.s3_client = boto3.client('s3')  # IAM Role handles authentication
 
         # Get the NGROK URL from environment variables
         ngrok_url = os.getenv('TELEGRAM_APP_URL')
