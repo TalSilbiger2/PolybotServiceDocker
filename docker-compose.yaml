@@ -48,6 +48,7 @@ services:
             ]
           })'
         "
+    restart: "no"
 
   yolo5-service:
     image: ${YOLO5_IMG_NAME}
